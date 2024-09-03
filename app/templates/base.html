@@ -14,44 +14,70 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-        nav {
-            background: linear-gradient(90deg, #ff8a00, #e52e71); /* Gradient background */
-            padding: 10px 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
             display: flex;
-            justify-content: space-around;
+        }
+        /* Verticale navigatiebalk styling */
+        .navbar {
+            background: linear-gradient(180deg, #ff8a00, #e52e71);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            padding-top: 20px;
         }
-        nav ul li {
-            margin: 0;
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
         }
-        nav ul li a {
+        .navbar-nav {
+            flex-direction: column;
+            width: 100%;
+        }
+        .nav-link {
             color: white;
             text-decoration: none;
-            padding: 10px 15px;
-            display: block;
-            font-weight: 700;
+            padding: 10px;
+            text-align: center;
+            width: 100%;
         }
-        nav ul li a:hover {
+        .nav-link:hover {
             background-color: #ff8a00;
+        }
+        /* Mobile navigatiebalk styling */
+        .navbar-toggler {
+            background-color: #ff8a00;
+            border: none;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
         }
         .container {
             padding: 20px;
             max-width: 1200px;
-            margin: 0 auto;
+            margin-left: 200px; /* Margin toevoegen om ruimte te maken voor de navbar */
+            flex: 1;
         }
-
-        /* Zoekresultaten zonder witte rand */
-        .no-padding-container {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+        @media (max-width: 768px) {
+            .navbar {
+                width: 100%;
+                height: auto;
+                position: static;
+                display: none; /* Verberg standaard de navbar op mobiel */
+            }
+            .container {
+                margin-left: 0;
+            }
+            .navbar-toggler {
+                display: block;
+            }
         }
-
         /* CSS voor de cookiemelding */
         .cookie-banner {
             position: fixed;
@@ -75,14 +101,20 @@
     </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="{{ url_for('welcome') }}">Home</a></li>
-            <li><a href="{{ url_for('traditional_search') }}">Trefwoord zoeken</a></li>
-            <li><a href="{{ url_for('faq') }}">FAQ</a></li>
-            <li><a href="{{ url_for('contact') }}">Contact</a></li>
+    <!-- Mobile navbar toggle button -->
+    <button class="navbar-toggler" onclick="toggleNavbar()">☰ Menu</button>
+
+    <!-- Verticale navigatiebalk -->
+    <nav class="navbar">
+        <div class="navbar-brand">JurisAnalyser</div>
+        <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('welcome') }}">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('traditional_search') }}">Trefwoord zoeken</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('faq') }}">FAQ</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contact</a></li>
         </ul>
     </nav>
+
     <div class="container no-padding-container">
         <!-- Dynamische inhoud container -->
         <div id="dynamic-content">
@@ -130,6 +162,16 @@
                 if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
             }
             return null;
+        }
+
+        // Toggle de zichtbaarheid van de navbar op mobiele apparaten
+        function toggleNavbar() {
+            var navbar = document.querySelector('.navbar');
+            if (navbar.style.display === 'none' || navbar.style.display === '') {
+                navbar.style.display = 'flex';
+            } else {
+                navbar.style.display = 'none';
+            }
         }
 
         // AJAX voor dynamische inhoud
