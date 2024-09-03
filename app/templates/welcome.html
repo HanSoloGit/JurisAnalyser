@@ -10,22 +10,15 @@
         overflow: hidden; /* Verberg de scrollbar */
     }
 
-    .container {
+    .full-height-container {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
         height: 100vh; /* Vul de volledige hoogte van het scherm */
         padding: 0 20px;
         box-sizing: border-box; /* Zorg ervoor dat padding wordt meegerekend in de totale hoogte */
-    }
-
-    .left-content {
-        flex: 1;
-    }
-
-    .right-content {
-        flex: 1;
-        text-align: right;
+        text-align: center;
     }
 
     .welcome-title {
@@ -50,10 +43,10 @@
     }
 </style>
 
-<div class="container text-center mt-5">
-    <div class="row justify-content-center">
+<div class="container full-height-container">
+    <div class="row">
         <div class="col-12">
-            <h1 class="display-4">Welkom bij JurisAnalyser Rechtspraakanalyse 2.0</h1>
+            <h1 class="display-4 welcome-title">Welkom bij JurisAnalyser Rechtspraakanalyse 2.0</h1>
         </div>
         <div class="col-12 mt-3">
             <a href="{{ url_for('some_route') }}" class="btn btn-primary btn-lg">Klik om te starten</a>
