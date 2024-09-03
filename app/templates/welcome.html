@@ -22,7 +22,7 @@
     }
 
     .welcome-title {
-        font-size: 2.5em; /* Vergroot de titeltekst */
+        font-size: 2em; /* Iets kleinere titeltekst voor betere weergave */
         margin-bottom: 10px;
     }
 
@@ -41,15 +41,31 @@
     .start-link:hover {
         text-decoration: underline;
     }
+
+    /* Knopstijl aanpassen om te passen bij de rest van het ontwerp */
+    .btn-custom {
+        background-color: #ff8a00; /* Kleur overeenkomend met de rest van het ontwerp */
+        border: none;
+        color: white; /* Witte tekst voor contrast */
+        padding: 10px 20px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-custom:hover {
+        background-color: #e52e71; /* Donkere tint voor hover effect */
+    }
 </style>
 
 <div class="container full-height-container">
     <div class="row">
         <div class="col-12">
-            <h1 class="display-4 welcome-title">Welkom bij JurisAnalyser Rechtspraakanalyse 2.0</h1>
+            <h1 class="welcome-title">Welkom bij JurisAnalyser Rechtspraakanalyse 2.0</h1>
         </div>
         <div class="col-12 mt-3">
-            <a href="{{ url_for('upload') }}" class="btn btn-primary btn-lg">Klik om te starten</a>
+            <a href="{{ url_for('upload') }}" class="btn btn-custom">Klik om te starten</a>
         </div>
     </div>
 </div>
