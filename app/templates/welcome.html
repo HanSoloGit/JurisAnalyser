@@ -50,15 +50,15 @@
     }
 </style>
 
-<div class="container animate">
-    <div class="left-content">
-        <h1 class="welcome-title">Welkom bij<br> JurisAnalyser</h1>
-        <p class="description">Rechtspraakanalyse 2.0</p>
-    </div>
-    <div class="right-content">
-        <p class="description">
-            <a href="{{ url_for('upload') }}" class="start-link">Klik</a> om te starten
-        </p>
+<div class="container text-center mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <h1 class="display-4">Welkom bij JurisAnalyser Rechtspraakanalyse 2.0</h1>
+        </div>
+        <div class="col-12 mt-3">
+            <a href="{{ url_for('some_route') }}" class="btn btn-primary btn-lg">Klik om te starten</a>
+        </div>
     </div>
 </div>
+
 {% endblock %}
