@@ -58,11 +58,22 @@
             justify-content: center;
             height: 85vh;
             text-align: center;
+            padding: 20px; /* Voeg padding toe voor betere uitlijning op mobiele apparaten */
         }
 
         .form-container {
-            width: 50%; /* Zorg ervoor dat de zoekbalk ongeveer de helft van de container is */
-            text-align: center; /* Zorg ervoor dat de tekst gecentreerd is binnen de zoekbalk */
+            width: 100%; /* Maak de zoekbalk responsief */
+            max-width: 500px; /* Max breedte voor grotere schermen */
+            text-align: center;
+            padding: 10px; /* Voeg padding toe om te zorgen voor ruimte rond de formulierelementen */
+        }
+
+        .form-container input[type="text"] {
+            width: 100%; /* Zorg ervoor dat het tekstveld de volledige breedte heeft */
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box; /* Zorg ervoor dat padding wordt meegerekend in de breedte */
         }
 
         .button-group {
@@ -70,6 +81,7 @@
             justify-content: center;
             gap: 10px; /* Ruimte tussen de knoppen */
             margin-top: 10px; /* Minder ruimte boven de knoppen */
+            flex-wrap: wrap; /* Zorg ervoor dat knoppen worden gewrapt op kleinere schermen */
         }
 
         /* Zorg ervoor dat de knoppen dezelfde stijl hebben als andere knoppen op de website */
@@ -107,6 +119,23 @@
 
         .btn-back:active {
             background-color: #ff8a00;
+        }
+
+        /* Media queries voor kleinere schermen */
+        @media (max-width: 576px) {
+            .form-container {
+                width: 100%; /* Zorg ervoor dat de form-container de volledige breedte op mobiele apparaten gebruikt */
+            }
+
+            .button-group {
+                flex-direction: column; /* Zorg ervoor dat knoppen onder elkaar komen op zeer kleine schermen */
+                gap: 5px; /* Minder ruimte tussen knoppen op kleine schermen */
+            }
+
+            .btn {
+                width: 100%; /* Zorg ervoor dat knoppen de volledige breedte hebben op mobiele apparaten */
+                padding: 10px 0; /* Verander de padding om knoppen gelijkmatig te maken */
+            }
         }
     </style>
 
