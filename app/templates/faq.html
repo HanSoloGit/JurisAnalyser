@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}FAQ{% endblock %}
+
+{% block content %}
+<h1 class="faq-header">Veelgestelde Vragen</h1>
+
+<div class="faq-section">
+    <div class="faq-item">
+        <h2 class="faq-question">Wat is het doel van JurisAnalyser?</h2>
+        <div class="faq-answer">
+            <p>JurisAnalyser is ontworpen om Nederlandse jurisprudentie effectief te doorzoeken. JurisAnalyser maakt het mogelijk om te zoeken naar zowel woorden als betekenis. Zoekresultaten kunnen eenvoudig worden doorzocht en opgeslagen wat resulteert in een efficiënte workflow.</p>
+        </div>
+    </div>
+    
+    <div class="faq-item">
+        <h2 class="faq-question">Hoe werkt JurisAnalyser?</h2>
+        <div class="faq-answer">
+            <p>JurisAnalyser werkt door rechtspraak van Rechtspraak.nl te uploaden op basis van ECLI-nummers. Zoekopdrachten kunnen worden uitgevoerd met woorden en geavanceerde AI-technieken voor het zoeken naar semantiek:</p>
+            <ul>
+                <li>Gebruikers hoeven niet elk jurisprudentiedocument te openen; de relevante paragrafen zijn direct zichtbaar.</li>
+                <li>De relevante paragrafen kunnen worden opgeslagen in een Excel-bestand voor systematische analyse.</li>
+                <li>Zoeken naar woorden en betekenis kan worden gecombineerd om de bevindingen te verifiëren en te cross-checken.</li>
+                <li>Een link naar de originele jurisprudentie wordt verstrekt als verdere validatie of context nodig is.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <h2 class="faq-question">Hoe upload ik ECLIs voor mijn analyse?</h2>
+        <div class="faq-answer">
+            <p>Om de ECLIs te uploaden, ga naar de 'Upload'-pagina die volgt op de 'Home'-pagina, selecteer het Excel-bestand met ECLIs en klik op 'Upload'. Het document wordt verwerkt en de inhoud wordt geanalyseerd op basis van de zoekopdrachten. Hier is een sjabloon voor een Excel-bestand om te uploaden:</p>
+            <p><a href="{{ url_for('download_template') }}">Download Excel-sjabloon</a></p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <h2 class="faq-question">Hoe wordt de rechtspraak van Rechtspraak.nl verzameld?</h2>
+        <div class="faq-answer">
+            <p>De tool gebruikt de API (Application Programming Interface) van rechtspraak.nl om gegevens op te halen voor elke ECLI die in het geüploade Excel-bestand is vermeld. Deze gegevens worden vervolgens opgeslagen in de database voor analyse. Het API-verzoek haalt XML-gegevens op, die worden geparsed en verwerkt voor verder gebruik. Zie voor een uitgebreide toelichting van de code @GitHub</p>
+        </div>
+    </div>
+    
+    <div class="faq-item">
+        <h2 class="faq-question">Wat is het verschil tussen trefwoord zoeken en semantisch zoeken?</h2>
+        <div class="faq-answer">
+            <h3>Trefwoord zoeken:</h3>
+            <p>Trefwoord zoeken betekent dat gezocht wordt naar exacte overeenkomsten van de ingevoerde trefwoorden in de jurisprudentie. Elk tekstelement van iedere uitspraak wordt gescand op de aanwezigheid van de woorden. Als de woorden in een tekstelement worden gevonden, wordt dat tekstelement getoond bij de resultaten.</p>
+            <h3>Semantisch zoeken:</h3>
+            <p>Bij semantisch zoeken kan op basis van context en synoniemen worden gezocht. De gehele tekst en zoekopdracht wordt gecodeerd met behulp van een voorgetraind model, en de gecodeerde zoekopdracht wordt vergeleken met de coderingen van de gehele tekst. Semantische similariteit genereert geen nieuwe inhoud, maar identificeert de vergelijkbaarheid tussen de zoekopdracht van de gebruiker en de bestaande jurisprudentie.ij het zoeken naar betekenis wordt je gevraagd een vraagstelling te formuleren. Op basis van de vraagstelling wordt berekend welke tekstovereenkomsten overeenkomen met de vraagstelling. Resultaten worden gerangschikt op basis van vergelijkbaarheidsscores en alleen die boven een bepaalde drempel worden opgenomen in de resultaten. Gebruikers kunnen de vergelijkbaarheidsscore voor de semantische zoekopdracht aanpassen. Experimenteren met de vraagstelling, vergelijkbaarheidsscores en het model resulteert in optimale resultaten. Het standaardmodel is niet getraind op juridische teksten en zal om die reden minder goed zijn dan modellen die zijn getraind voor specifieke taken (bijv. 'deskundigenbenoeming')</p>
+        </div>
+                 
+    </div>
+
+    <div class="faq-item">
+        <h2 class="faq-question">Hoe kan ik de resultaten bekijken?</h2>
+        <div class="faq-answer">
+            <p>Nadat de ECLIs zijn geüpload en een zoekopdracht is ingevoerd, worden de resultaten meteen op het scherm getoond. Hier kan door de gevonden resultaten worden gebladeren. De zoekresultaten kunnen worden opgeslagen in een Excel-bestand.</p>
+        </div>
+    </div>
+    
+    <div class="faq-item">
+        <h2 class="faq-question">Hoe zorgt JurisAnalyser voor goede zoekresultaten?</h2>
+        <div class="faq-answer">
+            <p>JurisAnalyser maakt gebruikt van geavanceerde natuurlijke taalverwerking (NLP) en machine learning-algoritmen om hoge nauwkeurigheid te garanderen. Daarnaast:</p>
+            <ul>
+                <li>Haalt de tool gegevens direct op van rechtspraak.nl, wat ervoor zorgt dat de informatie up-to-date en betrouwbaar is.</li>
+                <li>Stelt de tool gebruikers in staat om traditionele en semantische zoekopdrachten te controleren en de originele bron te bekijken.</li>
+                <li>Alle resultaten worden direct afgeleid van paragrafen van de geëxtraheerde zaken. 'Gefantaseerde tekst' is dus niet mogelijk.</li>
+                <li>JurisAnalyser is volledig open source. Alle code waarop JurisAnalyser is gebouwd, inclusief de zoekmethoden, is volledig transparant.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <h2 class="faq-question">Kan JurisAnalyser fouten maken?</h2>
+        <div class="faq-answer">
+            <p>JurisAnalyser is  maar in beperkte mate op specifiek juridische vraagstukken getraind. Om die reden zal JurisAnalyser sommige juridische thema's niet kennen of kunnen onderscheiden van andere (niet-juridische) thema's. Op het moment wordt gewerkt aan het uitbreiden van de datasets zodat JurisAnalyser beter presteert voor specifieke juridische taken. Het positieve effect van uitgebreidere datasets is al zichtbaar bij de betere prestaties van het model 'deskundigenbenoemingen' ten opzichte van het standaardmodel (pre-trained SBERT).</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <h2 class="faq-question">Wat maakt JurisAnalyser anders dan andere juridische zoekmachines?</h2>
+        <div class="faq-answer">
+            <p>JurisAnalyser is anders omdat het:</p>
+            <ul>
+                <li>Zoeken naar woorden en betekenis mogelijk maakt.</li>
+                <li>Een snellere workflow creëert door relevante gegevens direct zichtbaar te maken, zowel op het scherm als in Excel.</li>
+                <li>Volledig open source is. De zoekmethodologieën zijn transparant, wat de betrouwbaarheid van de resultaten verhoogt.</li>
+                <li>Een specifiek type AI (semantic textual similarity) gebruikt welke in hoge mate reproduceerbaar is. Een vergelijkbare zoekopdracht in de semantische zoekopdracht en similariteitsscore levert vrijwel altijd hetzelfde resultaat op. Moderne AI-systemen leveren niet per definitie dezelfde output op bij dezelfde input. Om de reproduceerbaarheid van het onderzoek te verhogen is het systeem zo geprogrammeerd dat het de reproduceerbaarheid verhoogt.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <h2 class="faq-question">Wat moet ik doen als ik problemen tegenkom bij het gebruik van JurisAnalyser?</h2>
+        <div class="faq-answer">
+            <p>Als er problemen zijn, neem dan contact met ons op via de 'Contact'-pagina. We helpen graag verder.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .faq-section {
+        text-align: center;
+        width: 80%;
+        margin: 0 auto;
+    }
+    .faq-section h1 {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .faq-item {
+        margin-bottom: 20px;
+    }
+    .faq-question {
+        margin: 0;
+        padding: 10px;
+        cursor: pointer;
+        background-color: #f1f1f1;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        text-align: left; /* Zorg ervoor dat de vragen links zijn uitgelijnd */
+    }
+    .faq-answer {
+        display: none;
+        padding: 10px;
+        border-left: 3px solid #3498db;
+        margin-top: 10px;
+        background-color: #fafafa;
+        border-radius: 5px;
+        text-align: left; /* Zorg ervoor dat de antwoorden links zijn uitgelijnd */
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questions = document.querySelectorAll('.faq-question');
+        questions.forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                if (answer.style.display === 'block') {
+                    answer.style.display = 'none';
+                } else {
+                    answer.style.display = 'block';
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

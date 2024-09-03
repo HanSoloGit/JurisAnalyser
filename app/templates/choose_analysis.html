@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Kies het type analyse{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+    
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 90vh;
+    }
+    .btn {
+        background-color: #ff8a00;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin: 10px;
+        cursor: pointer;
+    }
+    .btn:hover {
+        background-color: #e52e71;
+    }
+</style>
+
+<div class="container">
+    <h1>Stap 2: Kies de methode</h1>
+    <a href="{{ url_for('traditional_search') }}" class="btn">Trefwoord zoeken</a>
+</div>
+{% endblock %}

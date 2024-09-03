@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Rechtspraak uploaden{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 80vh;
+        opacity: 0;
+        transform: translateY(-50%);
+        animation: slideIn 1s forwards;
+    }
+
+    @keyframes slideIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .upload-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        width: 300px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .upload-area.dragover {
+        border-color: #ff8a00;
+    }
+
+    .btn {
+        background-color: #ff8a00;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+        background-color: #e52e71;
+    }
+
+    #file-input {
+        display: none;
+    }
+
+    .template-section {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .template-section a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .template-section a:hover {
+        text-decoration: underline;
+    }
+
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 220px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 5px;
+        padding: 5px 0;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -110px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>
+
+<div class="container">
+    <h1>Stap 1: Rechtspraak verzamelen</h1>
+    <div id="upload-area" class="upload-area">
+        <p>Upload een Excel met ECLIs</p>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.json">
+
+    <div>
+        <p>Weet je niet wat je moet uploaden?</p> 
+        <p>Download het <a href="{{ url_for('download_template') }}">voorbeeld</a></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', files[0]);
+
+                const filename = files[0].name;
+                const extension = filename.split('.').pop().toLowerCase();
+
+                if (extension === 'xlsx' || extension === 'json' || extension === 'xml') {
+                    uploadFile(formData);
+                } else {
+                    alert('Please upload a valid Excel (.xlsx), JSON (.json), or XML (.xml) file.');
+                }
+            }
+        }
+
+        function uploadFile(formData) {
+            fetch('{{ url_for("upload") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "{{ url_for('loading') }}";
+                } else {
+                    alert('File upload failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+                alert('Error uploading file. Please try again.');
+            });
+        }
+    });
+</script>
+{% endblock %}
