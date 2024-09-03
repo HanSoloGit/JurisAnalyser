@@ -21,7 +21,6 @@
             <ul>
                 <li>Gebruikers hoeven niet elk jurisprudentiedocument te openen; de relevante paragrafen zijn direct zichtbaar.</li>
                 <li>De relevante paragrafen kunnen worden opgeslagen in een Excel-bestand voor systematische analyse.</li>
-                <li>Zoeken naar woorden en betekenis kan worden gecombineerd om de bevindingen te verifiëren en te cross-checken.</li>
                 <li>Een link naar de originele jurisprudentie wordt verstrekt als verdere validatie of context nodig is.</li>
             </ul>
         </div>
@@ -38,19 +37,8 @@
     <div class="faq-item">
         <h2 class="faq-question">Hoe wordt de rechtspraak van Rechtspraak.nl verzameld?</h2>
         <div class="faq-answer">
-            <p>De tool gebruikt de API (Application Programming Interface) van rechtspraak.nl om gegevens op te halen voor elke ECLI die in het geüploade Excel-bestand is vermeld. Deze gegevens worden vervolgens opgeslagen in de database voor analyse. Het API-verzoek haalt XML-gegevens op, die worden geparsed en verwerkt voor verder gebruik. Zie voor een uitgebreide toelichting van de code @GitHub</p>
+            <p>De tool gebruikt de API (Application Programming Interface) van rechtspraak.nl om gegevens op te halen voor elke ECLI die in het geüploade Excel-bestand is vermeld. Deze gegevens worden vervolgens opgeslagen in de database voor analyse. Het API-verzoek haalt XML-gegevens op, die worden geparsed en verwerkt voor verder gebruik.</p>
         </div>
-    </div>
-    
-    <div class="faq-item">
-        <h2 class="faq-question">Wat is het verschil tussen trefwoord zoeken en semantisch zoeken?</h2>
-        <div class="faq-answer">
-            <h3>Trefwoord zoeken:</h3>
-            <p>Trefwoord zoeken betekent dat gezocht wordt naar exacte overeenkomsten van de ingevoerde trefwoorden in de jurisprudentie. Elk tekstelement van iedere uitspraak wordt gescand op de aanwezigheid van de woorden. Als de woorden in een tekstelement worden gevonden, wordt dat tekstelement getoond bij de resultaten.</p>
-            <h3>Semantisch zoeken:</h3>
-            <p>Bij semantisch zoeken kan op basis van context en synoniemen worden gezocht. De gehele tekst en zoekopdracht wordt gecodeerd met behulp van een voorgetraind model, en de gecodeerde zoekopdracht wordt vergeleken met de coderingen van de gehele tekst. Semantische similariteit genereert geen nieuwe inhoud, maar identificeert de vergelijkbaarheid tussen de zoekopdracht van de gebruiker en de bestaande jurisprudentie.ij het zoeken naar betekenis wordt je gevraagd een vraagstelling te formuleren. Op basis van de vraagstelling wordt berekend welke tekstovereenkomsten overeenkomen met de vraagstelling. Resultaten worden gerangschikt op basis van vergelijkbaarheidsscores en alleen die boven een bepaalde drempel worden opgenomen in de resultaten. Gebruikers kunnen de vergelijkbaarheidsscore voor de semantische zoekopdracht aanpassen. Experimenteren met de vraagstelling, vergelijkbaarheidsscores en het model resulteert in optimale resultaten. Het standaardmodel is niet getraind op juridische teksten en zal om die reden minder goed zijn dan modellen die zijn getraind voor specifieke taken (bijv. 'deskundigenbenoeming')</p>
-        </div>
-                 
     </div>
 
     <div class="faq-item">
@@ -63,32 +51,10 @@
     <div class="faq-item">
         <h2 class="faq-question">Hoe zorgt JurisAnalyser voor goede zoekresultaten?</h2>
         <div class="faq-answer">
-            <p>JurisAnalyser maakt gebruikt van geavanceerde natuurlijke taalverwerking (NLP) en machine learning-algoritmen om hoge nauwkeurigheid te garanderen. Daarnaast:</p>
             <ul>
-                <li>Haalt de tool gegevens direct op van rechtspraak.nl, wat ervoor zorgt dat de informatie up-to-date en betrouwbaar is.</li>
-                <li>Stelt de tool gebruikers in staat om traditionele en semantische zoekopdrachten te controleren en de originele bron te bekijken.</li>
-                <li>Alle resultaten worden direct afgeleid van paragrafen van de geëxtraheerde zaken. 'Gefantaseerde tekst' is dus niet mogelijk.</li>
-                <li>JurisAnalyser is volledig open source. Alle code waarop JurisAnalyser is gebouwd, inclusief de zoekmethoden, is volledig transparant.</li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <h2 class="faq-question">Kan JurisAnalyser fouten maken?</h2>
-        <div class="faq-answer">
-            <p>JurisAnalyser is  maar in beperkte mate op specifiek juridische vraagstukken getraind. Om die reden zal JurisAnalyser sommige juridische thema's niet kennen of kunnen onderscheiden van andere (niet-juridische) thema's. Op het moment wordt gewerkt aan het uitbreiden van de datasets zodat JurisAnalyser beter presteert voor specifieke juridische taken. Het positieve effect van uitgebreidere datasets is al zichtbaar bij de betere prestaties van het model 'deskundigenbenoemingen' ten opzichte van het standaardmodel (pre-trained SBERT).</p>
-        </div>
-    </div>
-
-    <div class="faq-item">
-        <h2 class="faq-question">Wat maakt JurisAnalyser anders dan andere juridische zoekmachines?</h2>
-        <div class="faq-answer">
-            <p>JurisAnalyser is anders omdat het:</p>
-            <ul>
-                <li>Zoeken naar woorden en betekenis mogelijk maakt.</li>
-                <li>Een snellere workflow creëert door relevante gegevens direct zichtbaar te maken, zowel op het scherm als in Excel.</li>
-                <li>Volledig open source is. De zoekmethodologieën zijn transparant, wat de betrouwbaarheid van de resultaten verhoogt.</li>
-                <li>Een specifiek type AI (semantic textual similarity) gebruikt welke in hoge mate reproduceerbaar is. Een vergelijkbare zoekopdracht in de semantische zoekopdracht en similariteitsscore levert vrijwel altijd hetzelfde resultaat op. Moderne AI-systemen leveren niet per definitie dezelfde output op bij dezelfde input. Om de reproduceerbaarheid van het onderzoek te verhogen is het systeem zo geprogrammeerd dat het de reproduceerbaarheid verhoogt.</li>
+                <li>JurisAnalyser haalt de gegevens direct op van Rechtspraak.nl, wat ervoor zorgt dat de informatie up-to-date en betrouwbaar is.</li>
+                <li>Alle resultaten worden direct afgeleid van paragrafen van de geëxtraheerde zaken.</li>
+                <li>JurisAnalyser is volledig open source. Alle code waarop JurisAnalyser is gebouwd, inclusief de zoekmethoden, is volledig transparant. Zie https://github.com/HanSoloGit/JurisAnalyser/</li>
             </ul>
         </div>
     </div>
