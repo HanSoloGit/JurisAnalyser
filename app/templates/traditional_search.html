@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-{% block title %}Trefwoord zoeken{% endblock %}
+{% block title %}Zoekopdracht{% endblock %}
 
 {% block content %}
     <style>
@@ -125,7 +125,7 @@
                 <input type="text" id="search_terms" name="search_terms" value="{{ search_terms }}" required>
             </div>
             <div class="button-group">
-                <a href="{{ url_for('choose_analysis') }}" class="btn btn-back">Back</a>
+                <a href="{{ url_for('choose_analysis') }}" class="btn btn-back">Vorige</a>
                 <button type="submit" class="btn">Zoek</button>
             </div>
         </form>
