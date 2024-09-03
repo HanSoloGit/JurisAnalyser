@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, send_from_directory, Response
+from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import requests
@@ -13,12 +13,10 @@ import re
 import shutil
 import tempfile
 import json
-import matplotlib.pyplot as plt
 import io
 import base64
 import random
 import numpy as np
-import concurrent.futures
 
 # Create Flask app instance
 app = Flask(__name__)
@@ -56,8 +54,6 @@ np.random.seed(0)
 
 logging.basicConfig(level=logging.INFO)
 
-ECLI_texts = {}
-
 # Initialize the database within an application context
 with app.app_context():
     db.create_all()
@@ -67,9 +63,7 @@ CORS(app)
 
 @app.route('/clear_url')
 def clear_url():
-    session.pop('url', None)
-    session.pop('unique_list', None)
-    session.pop('file_path', None)
+    session.clear()  # Clear entire session
     return redirect(url_for('welcome'))
 
 @app.route('/')
@@ -88,7 +82,6 @@ def contact():
 def privacy():
     return render_template('privacy.html')
 
-# Nieuwe route voor het instellen van gebruikersvoorkeuren
 @app.route('/set_preferences', methods=['POST'])
 def set_preferences():
     preferences = request.json.get('preferences', {})
@@ -105,7 +98,6 @@ def set_preferences():
     else:
         return jsonify({"status": "failed", "message": "No user logged in"}), 401
 
-# Route om gebruikersgegevens dynamisch op te halen
 @app.route('/get_dynamic_content', methods=['GET'])
 def get_dynamic_content():
     username = session.get('username', None)
@@ -182,14 +174,14 @@ def traditional_search():
 
 @app.route('/traditional_analysis', methods=['GET', 'POST'])
 def traditional_analysis():
-    global ECLI_texts
     search_results_count = 0
     used_synonyms = {}
 
     search_terms = session.get('search_terms', '')
     include_synonyms = session.get('include_synonyms', False)
+    ECLI_texts = session.get('ECLI_texts', {})  # Load ECLI_texts from session
 
-    start_time = time.time()  # Start tijdmeting
+    start_time = time.time()
 
     if search_terms:
         search_terms = [term.split('|') for term in search_terms.split(',') if term]
@@ -228,38 +220,40 @@ def traditional_analysis():
             search_results_count += len(highlighted_texts)
 
         session['used_synonyms'] = {term: list(synonyms) for term, synonyms in used_synonyms.items()}
+        session['ECLI_texts'] = ECLI_texts  # Save ECLI_texts in session
+        session.modified = True
 
     update_excel_file()
     update_json_file()
 
     scroll_position = session.get('scroll_position', 0)
-    app.logger.info(f"ECLI_texts: {ECLI_texts}")  # Voeg logging toe om de inhoud van ECLI_texts te controleren
+    app.logger.info(f"ECLI_texts: {ECLI_texts}")
 
-    end_time = time.time()  # Eind tijdmeting
+    end_time = time.time()
     elapsed_time = end_time - start_time
     app.logger.info(f"Traditional Search tijd: {elapsed_time} seconden")
 
-    # Voeg de traditionele zoekopdracht uitstoot toe als je die ook hebt
     emissions_traditional = session.get('emissions_traditional', 0)
     
     if emissions_traditional is None:
         emissions_traditional = 0
 
-    emissions_data = [emissions_traditional, 0]  # No semantic emissions
-    session['emissions_tritional'] = emissions_traditional  # Save the traditional search emissions in session
+    emissions_data = [emissions_traditional, 0]
 
-    session['current_analysis'] = 'traditional'  # Markeer dat traditionele analyse actief is
+    session['current_analysis'] = 'traditional'  # Mark that traditional analysis is active
 
     return render_template('traditional_analysis.html', ECLI_texts=ECLI_texts, search_results_count=search_results_count, used_synonyms=used_synonyms, search_terms=search_terms, scroll_position=scroll_position, emissions_data=emissions_data)
 
 @app.route('/previous_ecli/<ecli>', methods=['GET'])
 def previous_ecli(ecli):
+    ECLI_texts = session.get('ECLI_texts', {})
     logging.info(f"Previous ECLI called for: {ecli}")
     if ecli in ECLI_texts:
         current_index = ECLI_texts[ecli]['current_index']
-        # Verhoog de index in plaats van te verlagen
         ECLI_texts[ecli]['current_index'] = min(len(ECLI_texts[ecli]['texts']) - 1, current_index + 1)
         logging.info(f"Updated index for {ecli}: {ECLI_texts[ecli]['current_index']}")
+        session['ECLI_texts'] = ECLI_texts  # Update session with new ECLI_texts
+        session.modified = True
     update_excel_file()
     update_json_file()
 
@@ -272,12 +266,14 @@ def previous_ecli(ecli):
 
 @app.route('/next_ecli/<ecli>', methods=['GET'])
 def next_ecli(ecli):
+    ECLI_texts = session.get('ECLI_texts', {})
     logging.info(f"Next ECLI called for: {ecli}")
     if ecli in ECLI_texts:
         current_index = ECLI_texts[ecli]['current_index']
-        # Verlaag de index in plaats van te verhogen
         ECLI_texts[ecli]['current_index'] = max(0, current_index - 1)
         logging.info(f"Updated index for {ecli}: {ECLI_texts[ecli]['current_index']}")
+        session['ECLI_texts'] = ECLI_texts  # Update session with new ECLI_texts
+        session.modified = True
     update_excel_file()
     update_json_file()
 
@@ -290,6 +286,7 @@ def next_ecli(ecli):
 
 @app.route('/delete_ecli/<ecli>', methods=['GET'])
 def delete_ecli(ecli):
+    ECLI_texts = session.get('ECLI_texts', {})
     logging.info(f"Delete ECLI called for: {ecli}")
     if ecli in ECLI_texts:
         current_index = ECLI_texts[ecli]['current_index']
@@ -299,6 +296,8 @@ def delete_ecli(ecli):
                 ECLI_texts[ecli]['current_index'] = max(0, len(ECLI_texts[ecli]['texts']) - 1)
             ECLI_texts[ecli]['texts'] = [text for text in ECLI_texts[ecli]['texts'] if text]
         logging.info(f"Deleted text for {ecli}, remaining texts: {len(ECLI_texts[ecli]['texts'])}")
+        session['ECLI_texts'] = ECLI_texts  # Update session with new ECLI_texts
+        session.modified = True
     update_excel_file()
     update_json_file()
 
@@ -315,12 +314,9 @@ def download_template():
 @app.route('/download/excel', methods=['GET'])
 def download_excel():
     current_analysis = session.get('current_analysis', None)
-    if current_analysis == 'traditional':
-        temp_excel_file = session.get('temp_excel_file', None)
-    else:
-        return "No Excel file generated", 404
+    temp_excel_file = session.get('temp_excel_file', None)
 
-    if temp_excel_file:
+    if current_analysis == 'traditional' and temp_excel_file:
         return send_file(
             temp_excel_file,
             as_attachment=True,
@@ -333,12 +329,9 @@ def download_excel():
 @app.route('/download/json', methods=['GET'])
 def download_json():
     current_analysis = session.get('current_analysis', None)
-    if current_analysis == 'traditional':
-        temp_json_file = session.get('temp_json_file', None)
-    else:
-        return "No JSON file generated", 404
+    temp_json_file = session.get('temp_json_file', None)
 
-    if temp_json_file:
+    if current_analysis == 'traditional' and temp_json_file:
         return send_file(
             temp_json_file,
             as_attachment=True,
@@ -350,13 +343,14 @@ def download_json():
 
 def highlight_term(text, term):
     if text is None:
-        return text  # Return None if text is None
+        return text
     if not isinstance(text, str):
-        text = str(text)  # Convert to string if not already a string
+        text = str(text)
     return re.sub(r'(?i)('+re.escape(term)+r')', r'<span class="highlight">\1</span>', text)
 
 def update_excel_file():
     data = []
+    ECLI_texts = session.get('ECLI_texts', {})
     for ecli, texts in ECLI_texts.items():
         date = texts.get('date_link', 'No date available')
         if texts['texts']:
@@ -430,15 +424,12 @@ def api_request(ecli):
 
     logging.info(f"Requesting data for ECLI: {cleaned_ecli}")
 
-    # Check if the ECLI is already in the database
     entry = ECLIEntry.query.filter_by(ecli=cleaned_ecli).first()
     if entry:
-        # If it is, retrieve the XML data from the database
         root = ET.fromstring(entry.xml_content)
         identifier_link = entry.identifier_link
         date_link = entry.date_link
     else:
-        # If the ECLI is not in the database, fetch it via the API and save it in the database
         url = f"https://data.rechtspraak.nl/uitspraken/content?id={cleaned_ecli}"
         try:
             response = requests.get(url, stream=True)
@@ -446,7 +437,6 @@ def api_request(ecli):
             response.raise_for_status()
             root = ET.fromstring(response.content)
 
-            # Retrieve the identifier link and date link from the XML
             identifier_link = None
             for identifier_tag in root.findall('.//rdf:Description/dcterms:identifier', namespaces):
                 if identifier_tag.text and identifier_tag.text.startswith('http'):
@@ -462,7 +452,6 @@ def api_request(ecli):
                         logging.warning(f"Invalid date format for ECLI {cleaned_ecli}: {date_tag.text}")
                         date_link = None
 
-            # Store the XML content and other data in the database
             new_entry = ECLIEntry(
                 ecli=cleaned_ecli,
                 xml_content=ET.tostring(root, encoding='unicode'),
@@ -490,4 +479,4 @@ def get_synonyms(word):
     return [word]
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
