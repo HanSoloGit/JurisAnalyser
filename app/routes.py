@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_file, session, redirect, url_for, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_session import Session  # Import Flask-Session
 import requests
 import xml.etree.ElementTree as ET
 import pandas as pd
@@ -10,17 +11,13 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 import logging
 import re
-import shutil
 import tempfile
-import json
-import io
-import base64
 import random
 import numpy as np
 
 # Create Flask app instance
 app = Flask(__name__)
-app.secret_key = 'hello_world'  # Zorg dat je een sterke geheime sleutel gebruikt in productie
+app.secret_key = 'je_zeer_veilige_sleutel'  # Zorg dat je een sterke geheime sleutel gebruikt in productie
 
 # Configure file upload folder
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -34,6 +31,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecli_cache.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# Configure Flask-Session for server-side session storage
+app.config['SESSION_TYPE'] = 'filesystem'  # Je kunt 'redis', 'memcached', etc. gebruiken
+Session(app)
+
 # Database model for storing ECLI data
 class ECLIEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,6 +42,12 @@ class ECLIEntry(db.Model):
     xml_content = db.Column(db.Text, nullable=False)
     identifier_link = db.Column(db.String)
     date_link = db.Column(db.Date)
+
+# Database model for storing user session data
+class UserSessionData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    data = db.Column(db.PickleType, nullable=False)  # Gebruik PickleType voor complexe Python objecten
 
 # Nieuwe database model voor het opslaan van gebruikersinformatie
 class User(db.Model):
@@ -60,6 +67,21 @@ with app.app_context():
 
 # CORS configuratie
 CORS(app)
+
+def save_user_data(user_id, data):
+    """Opslaan van gebruikersspecifieke data in de database."""
+    user_data = UserSessionData.query.filter_by(user_id=user_id).first()
+    if user_data:
+        user_data.data = data
+    else:
+        user_data = UserSessionData(user_id=user_id, data=data)
+        db.session.add(user_data)
+    db.session.commit()
+
+def load_user_data(user_id):
+    """Ophalen van gebruikersspecifieke data uit de database."""
+    user_data = UserSessionData.query.filter_by(user_id=user_id).first()
+    return user_data.data if user_data else None
 
 @app.route('/clear_url')
 def clear_url():
@@ -131,7 +153,8 @@ def upload():
                 # Additional processing if needed
                 session['file_path'] = file_path
                 unique_list = load_eclis_from_excel(file_path)
-                session['unique_list'] = unique_list
+                user_id = session.get('user_id', 0)
+                save_user_data(user_id, {'unique_list': unique_list})
                 app.logger.info(f"Unique ECLI list: {unique_list}")
 
                 return redirect(url_for('loading'))
@@ -147,15 +170,15 @@ def loading():
 
 @app.route('/load_data', methods=['POST'])
 def load_data():
-    unique_list = session.get('unique_list', [])
-    app.logger.info(f"Loaded unique_list from session: {unique_list}")
+    user_id = session.get('user_id', 0)
+    data = load_user_data(user_id)
+    unique_list = data.get('unique_list', [])
+    app.logger.info(f"Loaded unique_list from user data: {unique_list}")
     for ecli in unique_list:
         if not ECLIEntry.query.filter_by(ecli=ecli).first():
             app.logger.info(f"Requesting data for ECLI: {ecli}")
             api_request(ecli)
 
-    # Update de JSON-file na het voltooien van de API-requests
-    update_json_file()
     return jsonify({"status": "done"})
 
 @app.route('/choose_analysis')
@@ -179,7 +202,9 @@ def traditional_analysis():
 
     search_terms = session.get('search_terms', '')
     include_synonyms = session.get('include_synonyms', False)
-    ECLI_texts = session.get('ECLI_texts', {})  # Load ECLI_texts from session
+    user_id = session.get('user_id', 0)
+    user_data = load_user_data(user_id)
+    ECLI_texts = user_data.get('ECLI_texts', {})
 
     start_time = time.time()
 
@@ -201,7 +226,7 @@ def traditional_analysis():
 
         ECLI_texts = {}
 
-        unique_list = session.get('unique_list', [])
+        unique_list = user_data.get('unique_list', [])
         for ecli in unique_list:
             root, identifier_link, date_link = api_request(ecli)
             if root is None:
@@ -220,11 +245,10 @@ def traditional_analysis():
             search_results_count += len(highlighted_texts)
 
         session['used_synonyms'] = {term: list(synonyms) for term, synonyms in used_synonyms.items()}
-        session['ECLI_texts'] = ECLI_texts  # Save ECLI_texts in session
+        save_user_data(user_id, {'ECLI_texts': ECLI_texts})
         session.modified = True
 
     update_excel_file()
-    update_json_file()
 
     scroll_position = session.get('scroll_position', 0)
     app.logger.info(f"ECLI_texts: {ECLI_texts}")
@@ -246,16 +270,17 @@ def traditional_analysis():
 
 @app.route('/previous_ecli/<ecli>', methods=['GET'])
 def previous_ecli(ecli):
-    ECLI_texts = session.get('ECLI_texts', {})
+    user_id = session.get('user_id', 0)
+    user_data = load_user_data(user_id)
+    ECLI_texts = user_data.get('ECLI_texts', {})
     logging.info(f"Previous ECLI called for: {ecli}")
     if ecli in ECLI_texts:
         current_index = ECLI_texts[ecli]['current_index']
         ECLI_texts[ecli]['current_index'] = min(len(ECLI_texts[ecli]['texts']) - 1, current_index + 1)
         logging.info(f"Updated index for {ecli}: {ECLI_texts[ecli]['current_index']}")
-        session['ECLI_texts'] = ECLI_texts  # Update session with new ECLI_texts
+        save_user_data(user_id, {'ECLI_texts': ECLI_texts})
         session.modified = True
     update_excel_file()
-    update_json_file()
 
     text = ECLI_texts[ecli]['texts'][ECLI_texts[ecli]['current_index']] if ECLI_texts[ecli]['texts'] else 'No results'
     return jsonify({
@@ -266,16 +291,17 @@ def previous_ecli(ecli):
 
 @app.route('/next_ecli/<ecli>', methods=['GET'])
 def next_ecli(ecli):
-    ECLI_texts = session.get('ECLI_texts', {})
+    user_id = session.get('user_id', 0)
+    user_data = load_user_data(user_id)
+    ECLI_texts = user_data.get('ECLI_texts', {})
     logging.info(f"Next ECLI called for: {ecli}")
     if ecli in ECLI_texts:
         current_index = ECLI_texts[ecli]['current_index']
         ECLI_texts[ecli]['current_index'] = max(0, current_index - 1)
         logging.info(f"Updated index for {ecli}: {ECLI_texts[ecli]['current_index']}")
-        session['ECLI_texts'] = ECLI_texts  # Update session with new ECLI_texts
+        save_user_data(user_id, {'ECLI_texts': ECLI_texts})
         session.modified = True
     update_excel_file()
-    update_json_file()
 
     text = ECLI_texts[ecli]['texts'][ECLI_texts[ecli]['current_index']] if ECLI_texts[ecli]['texts'] else 'No results'
     return jsonify({
@@ -286,7 +312,9 @@ def next_ecli(ecli):
 
 @app.route('/delete_ecli/<ecli>', methods=['GET'])
 def delete_ecli(ecli):
-    ECLI_texts = session.get('ECLI_texts', {})
+    user_id = session.get('user_id', 0)
+    user_data = load_user_data(user_id)
+    ECLI_texts = user_data.get('ECLI_texts', {})
     logging.info(f"Delete ECLI called for: {ecli}")
     if ecli in ECLI_texts:
         current_index = ECLI_texts[ecli]['current_index']
@@ -296,10 +324,9 @@ def delete_ecli(ecli):
                 ECLI_texts[ecli]['current_index'] = max(0, len(ECLI_texts[ecli]['texts']) - 1)
             ECLI_texts[ecli]['texts'] = [text for text in ECLI_texts[ecli]['texts'] if text]
         logging.info(f"Deleted text for {ecli}, remaining texts: {len(ECLI_texts[ecli]['texts'])}")
-        session['ECLI_texts'] = ECLI_texts  # Update session with new ECLI_texts
+        save_user_data(user_id, {'ECLI_texts': ECLI_texts})
         session.modified = True
     update_excel_file()
-    update_json_file()
 
     return jsonify({
         'text': 'No results' if not ECLI_texts[ecli]['texts'] else ECLI_texts[ecli]['texts'][ECLI_texts[ecli]['current_index']],
@@ -325,21 +352,6 @@ def download_excel():
         )
     else:
         return "No Excel file generated", 404
-    
-@app.route('/download/json', methods=['GET'])
-def download_json():
-    current_analysis = session.get('current_analysis', None)
-    temp_json_file = session.get('temp_json_file', None)
-
-    if current_analysis == 'traditional' and temp_json_file:
-        return send_file(
-            temp_json_file,
-            as_attachment=True,
-            download_name='ECLI_results.json',
-            mimetype='application/json'
-        )
-    else:
-        return "No JSON file generated", 404
 
 def highlight_term(text, term):
     if text is None:
@@ -350,7 +362,9 @@ def highlight_term(text, term):
 
 def update_excel_file():
     data = []
-    ECLI_texts = session.get('ECLI_texts', {})
+    user_id = session.get('user_id', 0)
+    user_data = load_user_data(user_id)
+    ECLI_texts = user_data.get('ECLI_texts', {})
     for ecli, texts in ECLI_texts.items():
         date = texts.get('date_link', 'No date available')
         if texts['texts']:
@@ -368,27 +382,6 @@ def update_excel_file():
         df.to_excel(temp_file.name, index=False)
 
     session['temp_excel_file'] = temp_file.name
-    session.modified = True
-
-def update_json_file():
-    data = []
-    for ecli in ECLIEntry.query.all():
-        root = ET.fromstring(ecli.xml_content)
-        identifier_link = ecli.identifier_link
-        date_link = ecli.date_link
-
-        texts = [elem.text for elem in root.iter() if elem.text]
-
-        data.append({
-            'ecli': ecli.ecli,
-            'identifier_link': identifier_link,
-            'date_link': date_link,
-            'texts': texts
-        })
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.json', mode='w', encoding='utf-8') as temp_file:
-        json.dump(data, temp_file, indent=4, default=str)
-        session['temp_json_file'] = temp_file.name
     session.modified = True
 
 def load_eclis_from_excel(file_path):
@@ -479,4 +472,4 @@ def get_synonyms(word):
     return [word]
 
 if __name__ == '__main__':
-    app.run(debug=False, port=5000)
+    app.run(debug=True, port=5000)
